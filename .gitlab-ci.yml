@@ -1,0 +1,46 @@
+variables:
+  AWS_FUNCTION_HANDLER: "TrueNasToNtfyNotificationsAdapter.Lambda::TrueNasToNtfyNotificationsAdapter.Lambda.EventHandler::HandleEvent"
+  AWS_BUILD_PATH: "$CI_PROJECT_DIR/$PROJECT_NAME.Lambda/bin/Release/net6.0/$PROJECT_NAME.Lambda.zip"
+  AWS_FUNCTION_NAME: "TrueNasToNtfyNotificationsAdapter"
+  DOTNET_IMAGE: "mcr.microsoft.com/dotnet/sdk:6.0-alpine"
+  DEPLOY_AWS_IMAGE: "amazon/lambda-build-node10.x"
+  PROJECT_NAME: "TrueNasToNtfyNotificationsAdapter"
+
+stages:
+  - build
+  - deploy
+
+Build AWS Lambda:
+  stage: build
+  image: $DOTNET_IMAGE
+  allow_failure: false
+  only:
+    - branches
+  before_script:
+    - dotnet tool install -g Amazon.Lambda.Tools
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - apk update && apk add --no-cache zip
+  script:
+    - echo "Building $PROJECT_NAME.Lambda..."
+    - cd $CI_PROJECT_DIR
+    - dotnet lambda package -pl $PROJECT_NAME.Lambda -c Release -o $AWS_BUILD_PATH
+  artifacts:
+    expire_in: 1 day
+    name: $AWS_FUNCTION_NAME
+    paths:
+      - $AWS_BUILD_PATH
+
+Deploy:
+  stage: deploy
+  image: $DEPLOY_AWS_IMAGE
+  only:
+    - branches
+  script:
+    - aws lambda update-function-configuration --function-name $AWS_FUNCTION_NAME
+      --handler $AWS_FUNCTION_HANDLER
+      --environment "Variables={NTFY_BASE_URL=$NTFY_BASE_URL, NTFY_TOPIC_NAME=$NTFY_TOPIC_NAME, TRUE_NAS_BASE_URL=$TRUE_NAS_BASE_URL}"
+    - aws lambda update-function-code --function-name $AWS_FUNCTION_NAME --zip-file fileb://$AWS_BUILD_PATH
+  needs:
+    - Build AWS Lambda
+  dependencies:
+    - Build AWS Lambda
