@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using ntfy;
 using ntfy.Actions;
 using ntfy.Requests;
-using Action = ntfy.Actions.Action;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
@@ -40,7 +39,7 @@ public class EventHandler
                 await SendNotificationAsync(ErrorToNtfyMessage(IncorrectSnsEventMessageDefaultMessage, PriorityLevel.Default), context);
                 continue;
             }
-
+            //var d = record.Sns.MessageId
             var notificationMessage = await EventMessageToNtfyMessage(record.Sns.Message, PriorityLevel.Default, context);
             await SendNotificationAsync(notificationMessage, context);
         }
@@ -74,8 +73,8 @@ public class EventHandler
                 Title = title,
                 Priority = priorityLevel,
                 Message = extractedAlert,
-                Tags = new[] { DefaultHeaderTag },
-                Actions = new Action[] { new View($"Open {title}", new Uri(_trueNasBaseUrl)) }
+                Tags = [DefaultHeaderTag],
+                Actions = [new View($"Open {title}", new Uri(_trueNasBaseUrl))]
             };
 
             return message;
@@ -122,7 +121,7 @@ public class EventHandler
             Title = nameof(TrueNasToNtfyNotificationsAdapter),
             Priority = priorityLevel,
             Message = errorText,
-            Tags = new[] { ErrorHeaderTag }
+            Tags = [ErrorHeaderTag]
         };
     }
 }

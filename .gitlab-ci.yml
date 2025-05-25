@@ -1,8 +1,8 @@
 variables:
   AWS_FUNCTION_HANDLER: "TrueNasToNtfyNotificationsAdapter.Lambda::TrueNasToNtfyNotificationsAdapter.Lambda.EventHandler::HandleEvent"
-  AWS_BUILD_PATH: "$CI_PROJECT_DIR/$PROJECT_NAME.Lambda/bin/Release/net6.0/$PROJECT_NAME.Lambda.zip"
+  AWS_BUILD_PATH: "$CI_PROJECT_DIR/$PROJECT_NAME.Lambda/bin/Release/net8.0/$PROJECT_NAME.Lambda.zip"
   AWS_FUNCTION_NAME: "TrueNasToNtfyNotificationsAdapter"
-  DOTNET_IMAGE: "mcr.microsoft.com/dotnet/sdk:6.0-alpine"
+  DOTNET_IMAGE: "mcr.microsoft.com/dotnet/sdk:8.0-alpine"
   DEPLOY_AWS_IMAGE: "amazon/lambda-build-node10.x"
   PROJECT_NAME: "TrueNasToNtfyNotificationsAdapter"
 
