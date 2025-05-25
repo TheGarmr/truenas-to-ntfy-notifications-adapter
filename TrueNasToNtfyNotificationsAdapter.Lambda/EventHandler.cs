@@ -66,15 +66,37 @@ public class EventHandler
             var titleWithTrueNasName = eventMessage.Split("<br><br>")[0];
             var title = titleWithTrueNasName.Replace("TrueNAS @ ", string.Empty);
             var ntfyText = HtmlMessageToNotificationMessage(eventMessage, titleWithTrueNasName);
+
+            var extractedAlert = ExtractAlertText(ntfyText);
+
             var message = new SendingMessage
             {
                 Title = title,
                 Priority = priorityLevel,
-                Message = ntfyText,
+                Message = extractedAlert,
                 Tags = new[] { DefaultHeaderTag },
                 Actions = new Action[] { new View($"Open {title}", new Uri(_trueNasBaseUrl)) }
             };
+
             return message;
+
+            string ExtractAlertText(string input)
+            {
+                const string startMarker = "New alerts:";
+                const string endMarker = "Current alerts:";
+
+                var startIndex = input.IndexOf(startMarker, StringComparison.Ordinal);
+                var endIndex = input.IndexOf(endMarker, StringComparison.Ordinal);
+
+                if (startIndex == -1 || endIndex == -1 || endIndex <= startIndex)
+                {
+                    return input.Trim();
+                }
+
+                startIndex += startMarker.Length;
+                return input.Substring(startIndex, endIndex - startIndex).Trim();
+
+            }
         }
         catch (Exception ex)
         {
@@ -86,7 +108,7 @@ public class EventHandler
         }
     }
 
-    private string HtmlMessageToNotificationMessage(string eventMessage, string titleWithTrueNasName)
+    private static string HtmlMessageToNotificationMessage(string eventMessage, string titleWithTrueNasName)
     {
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(Markdown.ToHtml(eventMessage.Replace(titleWithTrueNasName, string.Empty)));
